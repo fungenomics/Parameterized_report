@@ -1,0 +1,23 @@
+---
+title: "Parameterized iris summary"
+author: "Anthony Ma"
+description: "Make three html outputs based on the parameters"
+date: "17/06/2020"
+output: html_document
+params: 
+  species: setosa
+  data: hawaii
+  plots: !r ...
+  date: !r as.Date("2015-01-01")
+  
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+species <- params$species
+summary(iris[iris$Species == species, ])
+```

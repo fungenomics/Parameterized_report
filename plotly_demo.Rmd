@@ -1,0 +1,122 @@
+---
+title: "plotly_test"
+author: "Anthony Ma"
+date: "10/06/2020"
+output: html_document
+---
+
+```{r message=FALSE}
+library(plotly)
+library(tidyverse)
+```
+## Use ggplotly to transform ggplot into plotly plot
+
+```{r}
+p <- ggplot(diamonds, aes(x = log(carat), y = log(price))) + 
+  geom_hex(bins = 100)
+ggplotly(p)
+
+```
+
+
+
+```{r}
+m <- highlight_key(mpg)
+p <- ggplot(m, aes(displ, hwy)) + geom_point()
+gg <- highlight(ggplotly(p), "plotly_selected")
+crosstalk::bscols(gg, DT::datatable(m))
+```
+
+```{r}
+# load the diamonds dataset from the ggplot2 package
+data(diamonds, package = "ggplot2")
+# create three visualizations of the diamonds dataset
+plot_ly(diamonds, x = ~cut)
+
+```
+
+```{r}
+plot_ly(diamonds, x = ~cut, y = ~clarity)
+```
+
+```{r}
+# create three visualizations of the diamonds dataset
+plot_ly(diamonds, x = ~cut, color = ~clarity, colors = "Accent")
+```
+
+```{r}
+# make annotaion of your own finding
+library(ggforce)
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() +
+  geom_mark_hull(aes(filter = model == "corvette", label = model)) + # we retrieve the corvette data region
+  labs(
+    title = "Fuel economy from 1999 to 2008 for 38 car models",
+    caption = "Source: https://fueleconomy.gov/",
+    x = "Engine Displacement", 
+    y = "Miles Per Gallon"
+  )
+```
+
+
+# Customization
+## Translating custom ggplot2 geoms, less important for now
+Version 2.0.0 of ggplot2 introduced a way for other R packages to implement custom geoms. Some great examples include: ggrepel, ggalt, ggraph, geomnet, ggmosaic and ggtern. 
+Although the ggplotly() function translates most of the geoms bundled with the ggplot2 package, it has no way of knowing about the rendering rules for custom geoms. The plotly package does, however, provide 2 generic functions based on the S3 scheme that can leveraged to inform ggplotly() about these rules (Chambers 1992).50 To date, the ggmosaic and ggalt packages have taken advantage of this infrastructure to provide translations of their custom geoms to plotly.
+```{r}
+library(ggalt)
+getS3method("to_basic", "GeomXspline")
+function(data, prestats_data, layout, params, p, ...) {
+  data <- data[order(data[["x"]]), ]
+  prefix_class(data, "GeomPath")
+}
+# example from `help(geom_xspline)`
+set.seed(1492)
+dat <- data.frame(
+  x = c(1:10, 1:10, 1:10),
+  y = c(
+    sample(15:30, 10), 
+    2 * sample(15:30, 10), 
+    3 * sample(15:30, 10)
+  ),
+  group = factor(c(rep(1, 10), rep(2, 10), rep(3, 10)))
+)
+p <- ggplot(dat, aes(x, y, group = group, color = factor(group))) +
+  geom_point(color = "black") +
+  geom_smooth(se = FALSE, linetype = "dashed", size = 0.5) +
+  geom_xspline(spline_shape = 1, size = 0.5)
+ggplotly(p) %>% hide_legend()
+```
+
+## Use plotly in Shiny to generate plotly plot
+```{r}
+# library(shiny)
+# 
+# cities <- unique(txhousing$city)
+# 
+# ui <- fluidPage(
+#   selectizeInput(
+#     inputId = "cities", 
+#     label = NULL,
+#     # placeholder is enabled when 1st choice is an empty string
+#     choices = c("Please choose a city" = "", cities), 
+#     multiple = TRUE
+#   ),
+#   plotlyOutput(outputId = "p")
+# )
+# 
+# server <- function(input, output, session, ...) {
+#   output$p <- renderPlotly({
+#     req(input$cities)
+#     if (identical(input$cities, "")) return(NULL)
+#     p <- ggplot(data = filter(txhousing, city %in% input$cities)) + 
+#       geom_line(aes(date, median, group = city))
+#     height <- session$clientData$output_p_height
+#     width <- session$clientData$output_p_width
+#     ggplotly(p, height = height, width = width)
+#   })
+# }
+
+#shinyApp(ui, server)
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
